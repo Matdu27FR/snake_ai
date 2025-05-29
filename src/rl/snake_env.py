@@ -5,7 +5,7 @@ import numpy as np
 from gymnasium import spaces
 from src.core.game import game
 
-# Ajouter le dossier racine au chemin d'importation
+# Add root folder to import path
 root_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if root_path not in sys.path:
     sys.path.append(root_path)
@@ -19,19 +19,19 @@ class SnakeEnv(gym.Env):
         self.game.init_snake()
         self.game.update_snake()
 
-        # Nombre de canaux : 11 (corps, tête, pomme, derrière tête, 4 directions, dx, dy, danger)
+        # Number of channels: 11 (body, head, apple, behind head, 4 directions, dx, dy, danger)
         self.num_channels = 11
 
-        # Historique des 4 derniers états
+        # History of the last 4 states
         self.history_length = 4
-        # Crée 4 tableaux de zéros de taille 1100 (11 canaux * grille 10x10)
+        # Create 4 arrays of zeros with size 1100 (11 channels * 10x10 grid)
         self.history = [np.zeros((self.num_channels * grid_size[0] * grid_size[1],), dtype=np.float32) for _ in range(self.history_length)]
 
-        # Définition de l'espace d'action
+        # Define action space
         self.action_space = spaces.Discrete(4)
 
-        # Définition de l'espace d'observation aplatie (incluant l'historique)
-        # La taille totale est 4400 (11 canaux * grille 10x10 * 4 états d'historique)
+        # Define flattened observation space (including history)
+        # Total size is 4400 (11 channels * 10x10 grid * 4 history states)
         self.observation_space = spaces.Box(
             low=0,
             high=1,
@@ -39,7 +39,7 @@ class SnakeEnv(gym.Env):
             dtype=np.float32
         )
 
-        # Calcule la distance maximale possible dans la grille (diagonale)
+        # Calculate maximum possible distance in the grid (diagonal)
         self.max_distance = np.linalg.norm(np.array(grid_size))
         self.previous_food_eaten = len(self.game.snake)
         self.max_steps_without_food = max_steps_without_food
@@ -48,7 +48,7 @@ class SnakeEnv(gym.Env):
         self.apples_eaten = 0
 
     def seed(self, seed=None):
-        # Fixe la graine aléatoire pour reproduire les mêmes séquences
+        # Set random seed to reproduce the same sequences
         if seed is not None:
             np.random.seed(seed)
 
@@ -64,17 +64,17 @@ class SnakeEnv(gym.Env):
         self.visited_positions.add(tuple(self.game.snakehead))
         self.apples_eaten = 0
 
-        # Réinitialiser l'historique avec des zéros
+        # Reset history with zeros
         self.history = [np.zeros_like(self.history[0]) for _ in range(self.history_length)]
 
         observation = self._get_observation()
         self._update_history(observation)
 
-        # Retourne l'observation et un dictionnaire vide (format Gymnasium)
+        # Return observation and an empty dictionary (Gymnasium format)
         return self._get_combined_observation(), {}
 
     def step(self, action):
-        # Calcule la distance entre la tête et la nourriture avant le mouvement
+        # Calculate distance between head and food before movement
         old_distance = np.linalg.norm([
             self.game.snakehead[0] - self.game.food[0],
             self.game.snakehead[1] - self.game.food[1]
@@ -82,7 +82,7 @@ class SnakeEnv(gym.Env):
 
         self.game.move(action)
 
-        # Calcule la nouvelle distance après le mouvement
+        # Calculate new distance after movement
         new_distance = np.linalg.norm([
             self.game.snakehead[0] - self.game.food[0],
             self.game.snakehead[1] - self.game.food[1]
@@ -130,89 +130,89 @@ class SnakeEnv(gym.Env):
         return self._get_combined_observation(), reward, done, truncated, info
 
     def _get_observation(self):
-        # Convertit la grille du jeu en tableau NumPy
+        # Convert game grid to NumPy array
         grid = np.array(self.game.grid)
         head = self.game.snakehead
         food = self.game.food
 
-        # Calcule les directions relatives vers la nourriture (normalisées)
+        # Calculate relative directions to food (normalized)
         dx = (food[0] - head[0]) / self.grid_size[0]
         dy = (food[1] - head[1]) / self.grid_size[1]
 
         direction = self._get_direction()
 
-        # Crée des canaux binaires pour les éléments du jeu
-        # Transforme les cellules de valeur 1 en 1.0, autres en 0.0
+        # Create binary channels for game elements
+        # Transform cells with value 1 to 1.0, others to 0.0
         body_channel = (grid == 1).astype(np.float32)
         head_channel = (grid == 2).astype(np.float32)
         apple_channel = (grid == 3).astype(np.float32)
 
-        # Canal pour le segment juste derrière la tête
+        # Channel for segment just behind the head
         behind_head_channel = np.zeros(grid.shape, dtype=np.float32)
         if len(self.game.snake) > 0:
             behind_head = self.game.snake[0]
             behind_head_channel[behind_head[1], behind_head[0]] = 1
 
-        # Canaux pour la direction actuelle (one-hot encoding)
+        # Channels for current direction (one-hot encoding)
         direction_channels = np.zeros((4, grid.shape[0], grid.shape[1]), dtype=np.float32)
         if 0 <= direction < 4:
-            # Remplit un canal complet avec des 1 selon la direction
+            # Fill an entire channel with 1s according to direction
             direction_channels[direction, :, :] = 1
 
-        # Canaux pour la direction vers la nourriture
-        # Remplit toute la grille avec la même valeur
+        # Channels for direction to food
+        # Fill the entire grid with the same value
         dx_channel = np.full(grid.shape, dx, dtype=np.float32)
         dy_channel = np.full(grid.shape, dy, dtype=np.float32)
 
-        # Nouveau vecteur : danger pour chaque action
+        # New vector: danger for each action
         danger_vector = self._get_danger_vector()
 
-        # Liste de tous les canaux d'information
+        # List of all information channels
         channels = [
             body_channel,
             head_channel,
             apple_channel,
             behind_head_channel,
-            *direction_channels,  # Déplie les 4 canaux de direction
+            *direction_channels,  # Unpack the 4 direction channels
             dx_channel,
             dy_channel,
         ]
 
-        # Ajouter le danger_vector comme un canal supplémentaire
+        # Add danger_vector as an additional channel
         danger_channel = np.zeros(grid.shape, dtype=np.float32)
-        danger_channel[0, :4] = danger_vector  # Placer le vecteur danger dans la première ligne
+        danger_channel[0, :4] = danger_vector  # Place danger vector in first row
         channels.append(danger_channel)
 
-        # Aplatit tous les canaux en un seul vecteur 1D de taille 1100
+        # Flatten all channels into a single 1D vector of size 1100
         flattened_obs = np.concatenate([ch.flatten() for ch in channels])
         return flattened_obs
 
     def _get_danger_vector(self):
-        """Calcule un vecteur indiquant les actions dangereuses."""
+        """Calculate a vector indicating dangerous actions."""
         head_x, head_y = self.game.snakehead
-        # Crée un vecteur de 4 zéros pour les 4 directions
-        danger = np.zeros(4, dtype=np.float32)  # Vecteur pour les 4 actions : [haut, bas, gauche, droite]
+        # Create a vector of 4 zeros for the 4 directions
+        danger = np.zeros(4, dtype=np.float32)  # Vector for 4 actions: [up, down, left, right]
 
-        # Vérifier chaque direction en utilisant check_collision
-        if self.game.check_collision(head_x, head_y - 1):  # Haut
+        # Check each direction using check_collision
+        if self.game.check_collision(head_x, head_y - 1):  # Up
             danger[0] = 1
-        if self.game.check_collision(head_x, head_y + 1):  # Bas
+        if self.game.check_collision(head_x, head_y + 1):  # Down
             danger[1] = 1
-        if self.game.check_collision(head_x - 1, head_y):  # Gauche
+        if self.game.check_collision(head_x - 1, head_y):  # Left
             danger[2] = 1
-        if self.game.check_collision(head_x + 1, head_y):  # Droite
+        if self.game.check_collision(head_x + 1, head_y):  # Right
             danger[3] = 1
 
         return danger
 
     def _update_history(self, observation):
-        """Met à jour l'historique avec la nouvelle observation."""
-        self.history.pop(0)  # Supprime le plus ancien état
-        self.history.append(observation)  # Ajoute le nouvel état
+        """Update history with new observation."""
+        self.history.pop(0)  # Remove oldest state
+        self.history.append(observation)  # Add new state
 
     def _get_combined_observation(self):
-        """Combine les observations historiques en une seule."""
-        # Concatène les 4 observations historiques en un seul vecteur de taille 4400
+        """Combine historical observations into one."""
+        # Concatenate the 4 historical observations into a single vector of size 4400
         return np.concatenate(self.history)
 
     def _get_direction(self):
@@ -223,13 +223,13 @@ class SnakeEnv(gym.Env):
         body_x, body_y = self.game.snake[0]
 
         if head_x == body_x and head_y > body_y:
-            return 0  # Haut
+            return 0  # Up
         elif head_x == body_x and head_y < body_y:
-            return 1  # Bas
+            return 1  # Down
         elif head_y == body_y and head_x > body_x:
-            return 2  # Gauche
+            return 2  # Left
         elif head_y == body_y and head_x < body_x:
-            return 3  # Droite
+            return 3  # Right
         return -1
 
     def render(self, mode="human"):

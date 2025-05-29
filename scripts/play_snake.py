@@ -7,9 +7,9 @@ import pygame
 import cv2
 from stable_baselines3 import PPO
 
-# Ajouter le dossier parent au chemin
+# Add parent directory to path
 parent_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-print(f"Chemin ajouté à sys.path : {parent_path}")
+print(f"Path added to sys.path: {parent_path}")
 sys.path.append(parent_path)
 
 from src.rl.snake_env import SnakeEnv
@@ -19,18 +19,18 @@ def find_latest_model():
     base_path = "checkpoints_by_steps"
     
     if not os.path.exists(base_path):
-        print(f"Le dossier {base_path} n'existe pas.")
+        print(f"The folder {base_path} doesn't exist.")
         sys.exit(1)
     
     files = [f for f in os.listdir(base_path) if f.endswith(".zip")]
     
     if len(files) == 0:
-        print(f"Aucun modèle trouvé dans {base_path}.")
+        print(f"No models found in {base_path}.")
         sys.exit(1)
     
     files.sort(key=lambda f: os.path.getmtime(os.path.join(base_path, f)))
     latest_model = os.path.join(base_path, files[-1])
-    print(f"Modèle chargé : {latest_model}")
+    print(f"Model loaded: {latest_model}")
     return latest_model
 
 def play_snake(model_path=None, record=False, format="gif"):
@@ -49,9 +49,9 @@ def play_snake(model_path=None, record=False, format="gif"):
                 model_path = model_path[:-4]
             
             if not os.path.exists(model_path) and not os.path.exists(model_path + '.zip'):
-                print(f"Erreur: Le fichier modèle {model_path} n'existe pas.")
+                print(f"Error: Model file {model_path} doesn't exist.")
                 base_dir = "checkpoints_by_steps"
-                print(f"\nModèles disponibles dans {base_dir}:")
+                print(f"\nAvailable models in {base_dir}:")
                 if os.path.exists(base_dir):
                     for f in os.listdir(base_dir):
                         if f.endswith('.zip'):
@@ -63,12 +63,12 @@ def play_snake(model_path=None, record=False, format="gif"):
             elif os.path.exists(model_path + '.zip'):
                 model_path += '.zip'
                 
-        print(f"Modèle chargé : {model_path}")
+        print(f"Model loaded: {model_path}")
     
     try:
         model = PPO.load(model_path)
     except Exception as e:
-        print(f"Erreur lors du chargement du modèle: {e}")
+        print(f"Error loading model: {e}")
         sys.exit(1)
     
     visualizer = SnakeVisualizer(grid_size)
@@ -98,7 +98,7 @@ def play_snake(model_path=None, record=False, format="gif"):
         obs, reward, terminated, truncated, info = env.step(action)
         done = terminated or truncated
         total_apples = info.get("apples_eaten", total_apples)
-        print(f"Tête : {env.game.snakehead}, Corps : {env.game.snake}")
+        print(f"Head: {env.game.snakehead}, Body: {env.game.snake}")
 
         num_channels = 11
         last_state = obs[-(num_channels * grid_size[0] * grid_size[1]):]
@@ -117,12 +117,12 @@ def play_snake(model_path=None, record=False, format="gif"):
 
         time.sleep(0.1)
 
-    print(f"Nombre total de pommes mangées : {total_apples}")
+    print(f"Total apples eaten: {total_apples}")
     
     if record:
         if format == "mp4" and video_writer:
             video_writer.release()
-            print(f"Vidéo MP4 sauvegardée dans {output_path}")
+            print(f"MP4 video saved to {output_path}")
         elif format == "gif" and frames:
             try:
                 from PIL import Image
@@ -138,16 +138,16 @@ def play_snake(model_path=None, record=False, format="gif"):
                     duration=100,
                     loop=0
                 )
-                print(f"GIF sauvegardé dans {output_path}")
+                print(f"GIF saved to {output_path}")
             except ImportError:
-                print("PIL est nécessaire pour créer des GIFs. Essayez 'pip install pillow'")
+                print("PIL is required to create GIFs. Try 'pip install pillow'")
     
     visualizer.close()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Jouer au Snake avec un modèle IA")
-    parser.add_argument("--model", type=str, help="Chemin vers un modèle spécifique")
-    parser.add_argument("--record", action="store_true", help="Enregistrer la partie")
-    parser.add_argument("--format", choices=["gif", "mp4"], default="gif", help="Format d'enregistrement")
+    parser = argparse.ArgumentParser(description="Play Snake with an AI model")
+    parser.add_argument("--model", type=str, help="Path to a specific model")
+    parser.add_argument("--record", action="store_true", help="Record the game")
+    parser.add_argument("--format", choices=["gif", "mp4"], default="gif", help="Recording format")
     args = parser.parse_args()
     play_snake(model_path=args.model, record=args.record, format=args.format)

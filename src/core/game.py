@@ -1,6 +1,6 @@
 class game:
     def __init__(self, width, height) -> None:
-        """Initialise le jeu Snake avec une grille de dimensions spécifiées"""
+        """Initialize the Snake game with a grid of specified dimensions"""
         self.width = width
         self.height = height
         self.grid = []
@@ -11,7 +11,7 @@ class game:
         self.win = False
 
     def init_grid(self):
-        """Crée une grille vide remplie de zéros"""
+        """Create an empty grid filled with zeros"""
         self.grid = []
         for ligne in range(self.height):
             self.grid.append([])
@@ -19,22 +19,22 @@ class game:
                 self.grid[ligne].append(0)
 
     def clear_grid(self):
-        """Réinitialise la grille"""
+        """Reset the grid"""
         self.grid = []
         self.init_grid()
 
     def print_grid(self):
-        """Affiche la grille dans la console"""
+        """Display the grid in the console"""
         for ligne in range(len(self.grid)):
             print(self.grid[ligne])
 
     def init_snake(self):
-        """Initialise le serpent au centre de la grille"""
+        """Initialize the snake at the center of the grid"""
         firstx = int(self.width / 2)
         firsty = int(self.height / 2)
         self.snakehead = [firstx, firsty]
         
-        # Créer un serpent avec 2 segments de corps
+        # Create a snake with 2 body segments
         self.snake = [
             [firstx - 1, firsty],
             [firstx - 2, firsty]
@@ -45,10 +45,10 @@ class game:
         self.place_food()
 
     def update_snake(self):
-        """Met à jour l'affichage du serpent sur la grille"""
+        """Update the snake display on the grid"""
         self.clear_grid()
         
-        # Tête = 2, Corps = 1, Nourriture = 3
+        # Head = 2, Body = 1, Food = 3
         headx, heady = self.snakehead
         self.grid[heady][headx] = 2
         
@@ -62,7 +62,7 @@ class game:
             self.grid[foody][foodx] = 3
 
     def place_food(self):
-        """Place la nourriture aléatoirement sur une case libre"""
+        """Place food randomly on an empty cell"""
         import random
         
         free_positions = []
@@ -79,8 +79,8 @@ class game:
             self.game_over = True
 
     def check_collision(self, next_x, next_y):
-        """Vérifie si une position provoquerait une collision"""
-        # Collision avec les murs ou le corps
+        """Check if a position would cause a collision"""
+        # Collision with walls or body
         if next_x < 0 or next_x >= self.width or next_y < 0 or next_y >= self.height:
             return True
         
@@ -90,21 +90,21 @@ class game:
         return False
 
     def direction_correct(self, direction):
-        """Vérifie si la direction est valide (0: haut, 1: bas, 2: gauche, 3: droite)"""
+        """Check if the direction is valid (0: up, 1: down, 2: left, 3: right)"""
         list_direction = [0, 1, 2, 3]
         if direction in list_direction:
             return True
         return False
     
     def move(self, direction):
-        """Déplace le serpent dans la direction spécifiée"""
+        """Move the snake in the specified direction"""
         if self.game_over:
             return
         
         if self.direction_correct(direction):
             next_x, next_y = self.snakehead.copy()
             
-            # 0: haut, 1: bas, 2: gauche, 3: droite
+            # 0: up, 1: down, 2: left, 3: right
             if direction == 0:
                 next_y -= 1
             elif direction == 1:

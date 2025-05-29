@@ -4,21 +4,21 @@ import sys
 
 class SnakeVisualizer:
     def __init__(self, grid_size, cell_size=20):
-        """Initialise l'affichage visuel du jeu Snake"""
+        """Initialize the visual display of the Snake game"""
         self.grid_size = grid_size
         self.cell_size = cell_size
         
-        # Calcul de la taille de l'écran en pixels
+        # Calculate screen size in pixels
         self.screen_size = (grid_size[0] * cell_size, grid_size[1] * cell_size)
         
-        # Initialisation de Pygame
+        # Initialize Pygame
         pygame.init()
         self.screen = pygame.display.set_mode(self.screen_size)
         pygame.display.set_caption("Snake Game")
         self.clock = pygame.time.Clock()
 
     def render(self, observation):
-        """Affiche l'état actuel du jeu Snake"""
+        """Display the current state of the Snake game"""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -26,46 +26,46 @@ class SnakeVisualizer:
 
         self.screen.fill((0, 0, 0))
 
-        # Si l'observation est à plat (1D), la reformater en 3D
+        # If the observation is flat (1D), reshape it to 3D
         if len(observation.shape) == 1:
-            # L'IA utilise 11 canaux d'informations
+            # The AI uses 11 information channels
             num_channels = 11
             observation = observation.reshape((num_channels, self.grid_size[0], self.grid_size[1]))
 
-        # On extrait les 3 canaux principaux pour l'affichage
-        body_channel = observation[0]  # Où sont les segments du corps
-        head_channel = observation[1]  # Où est la tête
-        apple_channel = observation[2]  # Où est la pomme
+        # Extract the 3 main channels for display
+        body_channel = observation[0]  # Where the body segments are
+        head_channel = observation[1]  # Where the head is
+        apple_channel = observation[2]  # Where the apple is
 
-        # Dessiner le CORPS du serpent (en vert)
+        # Draw the snake BODY (in green)
         for x in range(self.grid_size[0]):
             for y in range(self.grid_size[1]):
-                if body_channel[x, y] == 1:  # Si un segment de corps est présent
+                if body_channel[x, y] == 1:  # If a body segment is present
                     pygame.draw.rect(
                         self.screen,
-                        (0, 255, 0),  # Couleur verte
+                        (0, 255, 0),  # Green color
                         pygame.Rect(y * self.cell_size, x * self.cell_size, 
                                    self.cell_size, self.cell_size)
                     )
 
-        # Dessiner la TÊTE du serpent (en bleu)
+        # Draw the snake HEAD (in blue)
         for x in range(self.grid_size[0]):
             for y in range(self.grid_size[1]):
-                if head_channel[x, y] == 1:  # Si la tête est présente
+                if head_channel[x, y] == 1:  # If the head is present
                     pygame.draw.rect(
                         self.screen,
-                        (0, 0, 255),  # Couleur bleue
+                        (0, 0, 255),  # Blue color
                         pygame.Rect(y * self.cell_size, x * self.cell_size, 
                                    self.cell_size, self.cell_size)
                     )
 
-        # Dessiner la POMME (en rouge)
+        # Draw the APPLE (in red)
         for x in range(self.grid_size[0]):
             for y in range(self.grid_size[1]):
-                if apple_channel[x, y] == 1:  # Si une pomme est présente
+                if apple_channel[x, y] == 1:  # If an apple is present
                     pygame.draw.rect(
                         self.screen,
-                        (255, 0, 0),  # Couleur rouge
+                        (255, 0, 0),  # Red color
                         pygame.Rect(y * self.cell_size, x * self.cell_size, 
                                    self.cell_size, self.cell_size)
                     )
@@ -74,5 +74,5 @@ class SnakeVisualizer:
         self.clock.tick(10)
 
     def close(self):
-        """Ferme la fenêtre Pygame"""
+        """Close the Pygame window"""
         pygame.quit()
